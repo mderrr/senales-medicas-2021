@@ -22,21 +22,23 @@ def remove_means(data):
     for i in range(len(data)):
         data[i] -= np.mean(data[i])
 
-def make_plots():
-    data_a = DATA[0]
+    return data
+ 
+def make_plots(data):
+    reference_data = data[0]
 
-    for plot_index in range(len(DATA) - 1):
-        ax1 = plt.subplot(SUBPLOT_OFFSET + plot_index)
-        data_to_compare = DATA[plot_index + 1]
-        summatory = round(np.sum(data_a * data_to_compare), DECIMAL_PLACES_SHOWN)
+    for plot_index in range(len(data) - 1):
+        data_to_compare = data[plot_index + 1]
+        summatory = round(np.sum(reference_data * data_to_compare), DECIMAL_PLACES_SHOWN)
 
-        plt.plot(data_a)
+        plt.subplot(SUBPLOT_OFFSET + plot_index)
+        plt.plot(reference_data)
         plt.plot(data_to_compare)
         plt.title(PLOT_TITLE.format(plot_index + 2) + str(summatory), fontsize=TITLE_FONT_SIZE)
         plt.grid()
         plt.xticks(fontsize=TICK_FONT_SIZE)
         plt.yticks(fontsize=TICK_FONT_SIZE)
 
-remove_means(DATA)
-make_plots()
-plt.show()
+if __name__ == "__main__":
+    make_plots(remove_means(DATA))
+    plt.show()
