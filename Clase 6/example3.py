@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import math 
 
-df = pd.read_csv('eeg.csv')
+df = pd.read_csv('Clase 6/eeg.csv')
 print(df.head(5))
 #df.plot( y='Amplitude', kind = 'line')
 
