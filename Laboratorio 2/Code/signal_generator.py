@@ -20,6 +20,14 @@ def generateSignal():
     signal_array *= 2
     signal_array -= .5
 
+    X = np.abs(np.fft.fft(signal_array))
+
+    # Frequency vector
+    f = (SAMPLING_FREQUENCY)*(np.arange(NUMBER_OF_SAMPLES)/NUMBER_OF_SAMPLES)
+    plt.figure("Signal Frequency Spectrum")
+    plt.plot(f,X)
+    plt.show()
+
     return time_array, signal_array
 
 if __name__ == "__main__":
