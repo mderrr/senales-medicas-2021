@@ -1,0 +1,4 @@
+Mi codigo tiene una estructura que es importante para su funcionemiento, por eso no subí solo el archivo de python.
+Aqui esta el link de mi repositorio: https://github.com/shernandezz/senales-medicas-2021
+La carpeta se puede descargar aqui: https://github.com/shernandezz/senales-medicas-2021/releases/download/1.0.0/laboratorio-2.zip
+O se puede descargar el repositorio completo y ejecutar el archivo main.py que esta en Laboratorio 2/Code.
