@@ -9,8 +9,8 @@ POINT_TITLE = "Punto 2a"
 EEG_SIGNAL_FILE = "eeg_1min.csv"
 EEG_SAMPLING_FREQUENCY = 500
 
-BANDS_FIGURE_TITLE = "EEG Bands"
-BANDS_FIGURE_SUPTITLE = "Comparison of EEG bands"
+BANDS_FIGURE_TITLE = "Comparison of EEG bands"
+BANDS_FIGURE_SUPTITLE = "zoomed in a window of {}s"
 ORIGINAL_SIGNAL_TITLE = "Original Signal"
 
 EEG_BANDS_LIST = [
@@ -46,7 +46,11 @@ def getEegBand(noisy_signal, signal_sampling_rate, band_bounds):
     return filtered_signal
 
 def splitEegBands(eeg_bands_list, eeg_signal):
-    pyplot.figure(BANDS_FIGURE_TITLE).suptitle(BANDS_FIGURE_SUPTITLE)
+    time_range = (EEG_SAMPLING_FREQUENCY * 6) # / 6
+    time_period = round(time_range * (1 / EEG_SAMPLING_FREQUENCY))
+    start_index = random.randint(0, (len(noisy_eeg_signal) - time_range))
+
+    pyplot.figure(BANDS_FIGURE_TITLE).suptitle(BANDS_FIGURE_SUPTITLE.format(time_period))
     axis = pyplot.subplot(3, 2, 1, xticks=[], yticks=[], title=ORIGINAL_SIGNAL_TITLE)
     pyplot.plot(eeg_signal)
 
@@ -57,8 +61,6 @@ def splitEegBands(eeg_bands_list, eeg_signal):
         pyplot.subplot(3, 2, eeg_band_plot_index, sharex=axis, xticks=[], yticks=[], title=eeg_band_title)
         pyplot.plot(eeg_band)
 
-    time_range = EEG_SAMPLING_FREQUENCY * 6
-    start_index = random.randint(0, (len(noisy_eeg_signal) - time_range))
     pyplot.xlim(start_index, start_index + time_range)
     pyplot.subplots_adjust(bottom=0.025, left=0.025, right=.975, wspace=0.05, hspace=0.25)
     pyplot.show()
