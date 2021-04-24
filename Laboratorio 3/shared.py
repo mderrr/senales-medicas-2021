@@ -17,7 +17,7 @@ INVALID_FILTER_TYPE_ERROR = "The argument: '{}' was not recognized, valid argume
 TEST_SAMPLES_TITLE = "Test samples for {} band"
 TEST_FRECUENCY_TITLE = "Critical frequency of ~{}Hz"
 
-POINT_TITLE_TEMPLATE = "////////////////  {}  ////////////////\n"
+POINT_TITLE_TEMPLATE = "////////////////  {}  ////////////////"
 
 def setCurrentWorkingDirectory():
     if (CURRENT_FILE_DIRECTORY != os.getcwd()):
@@ -82,6 +82,39 @@ def testCutoffFrequencies(noisy_signal, signal_sampling_rate, start_number, end_
         pyplot.plot(filtered_signal)
 
     pyplot.show()
+
+def getEegBand(noisy_signal, signal_sampling_rate, band_bounds, return_fft=False, do_not_filter=False):
+    filter_type = BANDPASS
+    lower_bound, higher_bound, _, _ = band_bounds
+    low_cutoff = lower_bound / (signal_sampling_rate / 2)
+    high_cutoff = higher_bound / (signal_sampling_rate / 2)
+
+    if (lower_bound < 1):
+        cutoff_frequencies = high_cutoff
+        filter_type = LOWPASS
+
+    elif (higher_bound == 0):
+        cutoff_frequencies = low_cutoff
+        filter_type = HIGHPASS
+
+    else:
+        cutoff_frequencies = [low_cutoff, high_cutoff]
+
+    if do_not_filter:
+        filtered_signal = noisy_signal
+    else:
+        b, a = signal.butter(5, cutoff_frequencies, filter_type)
+        filtered_signal = signal.filtfilt(b, a, noisy_signal) 
+
+    if (return_fft):
+        filtered_signal_size = len(filtered_signal)
+        filtered_signal -= numpy.mean(filtered_signal)
+        transformed_signal = numpy.abs(numpy.fft.fft(filtered_signal))
+        frequency_array = (signal_sampling_rate) * (numpy.arange(1, filtered_signal_size + 1) / filtered_signal_size)
+
+        return frequency_array, transformed_signal
+
+    return filtered_signal
 
 # This will execte every time shared is imported
 setCurrentWorkingDirectory()
