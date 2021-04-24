@@ -1,7 +1,6 @@
 import shared
 from scipy import signal
 from matplotlib import pyplot
-import numpy
 import random
 
 POINT_TITLE = "Punto 2a"
