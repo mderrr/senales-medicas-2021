@@ -26,12 +26,9 @@ def showSamplingFrequencyTests():
     # Find the best high pass
     shared.testCutoffFrequencies(noisy_ecg_signal, ECG_SAMPLING_FREQUENCY, 19, 40, 9, band_to_test=shared.HIGHPASS, stable_cutoff_frequency=0.5) # Best looking is ~25Hz
 
+
 def applyPassbandFilter():
-    low_cutoff = LOW_CUTOFF_VALUE / (ECG_SAMPLING_FREQUENCY / 2)
-    high_cutoff = HIGH_CUTOFF_VALUE / (ECG_SAMPLING_FREQUENCY / 2)
-    cutoff_frequencies = [low_cutoff, high_cutoff]
-    b, a = signal.butter(4, cutoff_frequencies, shared.BANDPASS)
-    filtered_ecg_signal = signal.filtfilt(b, a, noisy_ecg_signal) 
+    filtered_ecg_signal = shared.filterSignal(noisy_ecg_signal, ECG_SAMPLING_FREQUENCY, LOW_CUTOFF_VALUE, HIGH_CUTOFF_VALUE)#signal.filtfilt(b, a, noisy_ecg_signal) 
 
     pyplot.figure(FILTERED_FIGURE_TITLE).suptitle(FILTERED_FIGURE_SUPTITLE.format(LOW_CUTOFF_VALUE, HIGH_CUTOFF_VALUE))
 
