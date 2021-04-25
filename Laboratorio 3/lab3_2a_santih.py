@@ -1,7 +1,5 @@
-import numpy
 import random
 import shared
-from scipy import signal
 from matplotlib import pyplot
 
 POINT_TITLE = "Punto 2a"
@@ -11,26 +9,18 @@ EEG_SAMPLING_FREQUENCY = 500
 
 BANDS_FIGURE_TITLE = "Comparison of EEG bands"
 BANDS_FIGURE_SUPTITLE = "zoomed in a window of {}s"
-
-EEG_BANDS_LIST = [
-    (0, 0, "Original Signal", 1),
-    (30, 0 , "Gamma - 30Hz to 100Hz+", 3),
-    (12, 30 , "Beta - 12Hz to 30Hz", 5),
-    (8, 12 , "Alpha - 8Hz to 12Hz", 2),
-    (4, 7 , "Theta - 4Hz to 7Hz", 4),
-    (0, 4 , "Delta - 0Hz to 4Hz", 6)
-]
+RMS_FORMAT = "RMS of {}"
 
 ZOOM_IN_SECONDS = 6
 
 noisy_eeg_signal = shared.getSignalFromFile(EEG_SIGNAL_FILE)
 
-def splitEegBands(eeg_bands_list, eeg_signal, display_fft=False, start_unfiltered=True):
-    time_range = (EEG_SAMPLING_FREQUENCY * ZOOM_IN_SECONDS) # / 3
-    time_period = round(time_range * (1 / EEG_SAMPLING_FREQUENCY))
+def splitEegBands(eeg_bands_list, eeg_signal, start_unfiltered=True, display_rms=False, zoom_in_seconds=ZOOM_IN_SECONDS):
+    rms_list = {}
+    time_range = (EEG_SAMPLING_FREQUENCY * zoom_in_seconds) # / 3
     start_index = random.randint(0, (len(noisy_eeg_signal) - time_range))
 
-    pyplot.figure(BANDS_FIGURE_TITLE).suptitle(BANDS_FIGURE_SUPTITLE.format(time_period))
+    pyplot.figure(BANDS_FIGURE_TITLE).suptitle(BANDS_FIGURE_SUPTITLE.format(zoom_in_seconds))
     pyplot.subplots_adjust(bottom=0.025, left=0.025, right=.975, wspace=0.05, hspace=0.25)
     axis = pyplot.subplot(3, 2, 1)
 
@@ -42,10 +32,17 @@ def splitEegBands(eeg_bands_list, eeg_signal, display_fft=False, start_unfiltere
         axis.set_xlim(start_index, start_index + time_range)
         pyplot.plot(eeg_band)
 
+        if display_rms:
+            band_rms = [shared.getRootMeanSquare(eeg_band)] * len(eeg_band)
+            rms_list[eeg_band_title] = band_rms[0]
+            pyplot.plot(band_rms, label=RMS_FORMAT.format(round(band_rms[0])))
+            pyplot.legend()
+
         start_unfiltered = False
     
     pyplot.show()
+    return list(rms_list.items())
 
 if __name__ == "__main__":
     shared.clear(POINT_TITLE)
-    splitEegBands(EEG_BANDS_LIST, noisy_eeg_signal, True)
+    splitEegBands(shared.VERBOSE_EEG_BANDS_LIST, noisy_eeg_signal)
