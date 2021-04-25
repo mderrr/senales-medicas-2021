@@ -12,12 +12,33 @@ BANDPASS = "bandpass"
 LOWPASS = "lowpass"
 HIGHPASS = "highpass"
 
+LOW_CUTOFF_VALUE = 0.5
+HIGH_CUTOFF_VALUE = 25
+
 INVALID_FILTER_TYPE_ERROR = "The argument: '{}' was not recognized, valid arguments are: 'lowpass' or 'highpass'."
 
 TEST_SAMPLES_TITLE = "Test samples for {} band"
 TEST_FRECUENCY_TITLE = "Critical frequency of ~{}Hz"
 
 POINT_TITLE_TEMPLATE = "////////////////  {}  ////////////////"
+
+EEG_BANDS_LIST = [
+    (0, 0, "Original Signal", 1),
+    (30, 0 , "Gamma", 3),
+    (12, 30 , "Beta", 5),
+    (8, 12 , "Alpha", 2),
+    (4, 7 , "Theta", 4),
+    (0, 4 , "Delta", 6)
+]
+
+VERBOSE_EEG_BANDS_LIST = [
+    (0, 0, "Original Signal", 1),
+    (30, 0 , "Gamma - 30Hz to 100Hz+", 3),
+    (12, 30 , "Beta - 12Hz to 30Hz", 5),
+    (8, 12 , "Alpha - 8Hz to 12Hz", 2),
+    (4, 7 , "Theta - 4Hz to 7Hz", 4),
+    (0, 4 , "Delta - 0Hz to 4Hz", 6)
+]
 
 def setCurrentWorkingDirectory():
     if (CURRENT_FILE_DIRECTORY != os.getcwd()):
@@ -32,6 +53,20 @@ def getSignalFromFile(file_name, first_key=""):
     if not first_key: first_key = list(file_dictionary.keys())[0]
     return file_dictionary[first_key]
 
+def getRootMeanSquare(signal):
+    squared_signal = signal ** 2
+    rms_value = numpy.sqrt(numpy.sum(squared_signal) / len(squared_signal))
+
+    return rms_value
+
+def filterSignal(noisy_signal, signal_samping_rate, low_cutoff_value=LOW_CUTOFF_VALUE, high_cutoff_value=HIGH_CUTOFF_VALUE):
+    low_cutoff = low_cutoff_value / (signal_samping_rate / 2)
+    high_cutoff = high_cutoff_value / (signal_samping_rate / 2)
+    cutoff_frequencies = [low_cutoff, high_cutoff]
+    b, a = signal.butter(4, cutoff_frequencies, BANDPASS)
+
+    return signal.filtfilt(b, a, noisy_signal) 
+    
 def testCutoffFrequencies(noisy_signal, signal_sampling_rate, start_number, end_number, number_of_samples, band_to_test=LOWPASS, stable_cutoff_frequency=25):
     def getClosestPerfectGrid(number):
         for i in range(2, 40): # 40 is just a limit to prevent infinite loop
