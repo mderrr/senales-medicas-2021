@@ -165,6 +165,14 @@ def testCutoffFrequencies(noisy_signal, signal_sampling_rate, start_number, end_
 
     pyplot.show()
 
+def getSignalFft(signal_array, signal_sampling_rate):
+    signal_array_size = len(signal_array)
+    signal_array -= numpy.mean(signal_array)
+    transformed_signal = numpy.abs(numpy.fft.fft(signal_array))
+    frequency_array = (signal_sampling_rate) * (numpy.arange(1, signal_array_size + 1) / signal_array_size)
+
+    return frequency_array, transformed_signal
+
 def getEegBand(noisy_signal, signal_sampling_rate, band_bounds, return_fft=False, do_not_filter=False):
     filter_type = BANDPASS
     lower_bound, higher_bound, _, _, _ = band_bounds
@@ -189,12 +197,7 @@ def getEegBand(noisy_signal, signal_sampling_rate, band_bounds, return_fft=False
         filtered_signal = signal.filtfilt(b, a, noisy_signal) 
 
     if (return_fft):
-        filtered_signal_size = len(filtered_signal)
-        filtered_signal -= numpy.mean(filtered_signal)
-        transformed_signal = numpy.abs(numpy.fft.fft(filtered_signal))
-        frequency_array = (signal_sampling_rate) * (numpy.arange(1, filtered_signal_size + 1) / filtered_signal_size)
-
-        return frequency_array, transformed_signal
+        return getSignalFft(filtered_signal, signal_sampling_rate)
 
     return filtered_signal
 
