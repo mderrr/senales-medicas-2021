@@ -16,23 +16,16 @@ ORIGINAL_LABEL = "Original"
 EMG_LABEL = "Filtered EMG"
 ECG_LABEL = "Filtered ECG"
 
-noisy_first_newborn_signal = shared.getSignalFromFile(NEWBORN_SIGNAL_FILE, NEWBORN_CSV_KEYS[0])
-noisy_second_newborn_signal = shared.getSignalFromFile(NEWBORN_SIGNAL_FILE, NEWBORN_CSV_KEYS[1])
-
-NEWBORN_SIGNAL_SAMPLING_FREQUENCY = int(len(noisy_first_newborn_signal) / 60)
-
-NOISY_NEWBORN_SIGNALS_LIST = [noisy_first_newborn_signal, noisy_second_newborn_signal]
-
 EMG_HIGHPASS_FREQUENCY_CUTOFF = 60
 ECG_HIGHPASS_FREQUENCY_CUTOFF = 0.5
 ECG_LOWPASS_FREQUENCY_CUTOFF = 20
 
-def showSamplingFrequencyTests():
+def showSamplingFrequencyTests(signal_array, signal_sampling_frequency):
     # Find the best low pass for EMG
-    shared.testCutoffFrequencies(noisy_first_newborn_signal, NEWBORN_SIGNAL_SAMPLING_FREQUENCY, 5, 60, 16, stable_cutoff_frequency=450) # Best looking is ~60Hz
+    shared.testCutoffFrequencies(signal_array, signal_sampling_frequency, 5, 60, 16, stable_cutoff_frequency=450) # Best looking is ~60Hz
 
     # Find the best high pass for EMG
-    shared.testCutoffFrequencies(noisy_first_newborn_signal, NEWBORN_SIGNAL_SAMPLING_FREQUENCY, 80, 450, 16, band_to_test=shared.HIGHPASS, stable_cutoff_frequency=60) # Doesn´t seem to matter that much? 
+    shared.testCutoffFrequencies(signal_array, signal_sampling_frequency, 80, 450, 16, band_to_test=shared.HIGHPASS, stable_cutoff_frequency=60) # Doesn´t seem to matter that much? 
 
 def getFilteredEmgSignal(original_signal, signal_sampling_frequency, cutoff_frequency=EMG_HIGHPASS_FREQUENCY_CUTOFF):    
     return shared.simpleFilterSignal(original_signal, signal_sampling_frequency, shared.HIGHPASS, cutoff_frequency, acount_for_dc_level=True)
@@ -61,7 +54,7 @@ def showEmgComparison(newborn_signal, newborn_signal_sampling_frequency, newborn
     return filtered_emg_signal
 
 def showEcgComparison(newborn_signal, newborn_signal_sampling_frequency, newborn_number):
-    filtered_ecg_signal = getFilteredEcgSignal(newborn_signal, newborn_signal_sampling_frequency, ECG_HIGHPASS_FREQUENCY_CUTOFF, ECG_LOWPASS_FREQUENCY_CUTOFF)
+    filtered_ecg_signal = getFilteredEcgSignal(newborn_signal, newborn_signal_sampling_frequency, ECG_HIGHPASS_FREQUENCY_CUTOFF, ECG_LOWPASS_FREQUENCY_CUTOFF, )
 
     figure = pyplot.figure(NEWBORN_FIGURE_TITLE.format(newborn_number))
     pyplot.suptitle(ECG_SUPTITLE, fontsize=shared.SUPTITLE_FONT_SIZE)
@@ -107,12 +100,17 @@ def showFiltering(newborn_signal, newborn_signal_sampling_frequency, newborn_num
 
 @shared.presentPoint
 def main():
+    noisy_first_newborn_signal = shared.getSignalFromFile(NEWBORN_SIGNAL_FILE, NEWBORN_CSV_KEYS[0])
+    noisy_second_newborn_signal = shared.getSignalFromFile(NEWBORN_SIGNAL_FILE, NEWBORN_CSV_KEYS[1])
+
     newborn_number = 1
+    newborn_signal_sampling_rate = int(len(noisy_first_newborn_signal) / 60)
+    signals_list = [noisy_first_newborn_signal, noisy_second_newborn_signal]
 
-    showSamplingFrequencyTests()
+    showSamplingFrequencyTests(noisy_first_newborn_signal, newborn_signal_sampling_rate)
 
-    for newborn in NOISY_NEWBORN_SIGNALS_LIST:
-        showFiltering(newborn, NEWBORN_SIGNAL_SAMPLING_FREQUENCY, newborn_number)
+    for newborn in signals_list:
+        showFiltering(newborn, newborn_signal_sampling_rate, newborn_number)
         newborn_number += 1
 
 if __name__ == "__main__":
