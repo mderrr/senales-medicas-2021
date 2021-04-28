@@ -1,12 +1,14 @@
+import os
+import sys
+import numpy
+import pandas
+import platform
 from scipy import signal
-from matplotlib import pyplot
-from tkinter import Tk, messagebox, Toplevel, Label, Button
-from matplotlib.animation import FuncAnimation
-from matplotlib.ticker import EngFormatter as plotTickFormatter
 from fnmatch import fnmatch
-import os, sys, platform, pandas, numpy
-
-CURRENT_FILE_DIRECTORY = os.path.dirname(__file__)
+from matplotlib import pyplot
+from matplotlib.animation import FuncAnimation
+from tkinter import Tk, messagebox, Toplevel, Label, Button
+from matplotlib.ticker import EngFormatter as plotTickFormatter
 
 ECG_FILE_NAME = "./ecg_noisy2.csv"
 EEG_FILE_NAME = "./eeg_1min.csv"
@@ -45,11 +47,12 @@ ALERT_POPUP_TYPE = "error"
 INFO_POPUP_TITLE = "información"
 WARNING_POPUP_TITLE = "advertencia"
 ALERT_POPUP_TITLE = "ALERTA"
+
 TEST_SAMPLES_TITLE = "Test samples for {} band"
 TEST_FRECUENCY_TITLE = "~{}Hz"
 DEFAULT_EXTRACTED_PEAKS_TITLE = "Patient {}"
 
-POINT_TITLE_TEMPLATE = "////////////////  Point {}  ////////////////"
+POINT_TITLE_TEMPLATE = "////////////////  Punto {}  ////////////////"
 
 DEFAULT_EXTRACTED_PEAKS_SUPTITLE = "Extracted Peaks From Patient {}'s Signal"
 
@@ -87,15 +90,6 @@ ARIAL= "Arial"
 
 BUTTON_TEXT_CONTINUE = "Continuar"
 
-ECG_SAMPLING_FREQUENCY = 1000
-EEG_SAMPLING_FREQUENCY = 500
-
-LOW_CUTOFF_VALUE = 0.5
-HIGH_CUTOFF_VALUE = 25
-
-SUPTITLE_FONT_SIZE = 16
-LABEL_FONT_SIZE = 14
-
 APNEA_CSV_KEYS = [
     "Neonato 1",
     "Neonato 2"
@@ -108,6 +102,15 @@ EEG_BAND_NAMES = [
     "Alpha: 8Hz to 12Hz",
     "Theta: 4Hz to 7Hz", 
     "Delta: 0Hz to 4Hz"
+]
+
+COLORS_BLUE_GRADIENT = [
+    "midnightblue",
+    "navy",
+    "darkblue",
+    "mediumblue",
+    "blue",
+    "royalblue"
 ]
 
 FONT_ARIAL = {
@@ -126,6 +129,28 @@ POPUP_TITLES = {
     ALERT_POPUP_TYPE: ALERT_POPUP_TITLE
 }
 
+ECG_SAMPLING_FREQUENCY = 1000
+EEG_SAMPLING_FREQUENCY = 500
+
+LOW_CUTOFF_VALUE = 0.5
+HIGH_CUTOFF_VALUE = 25
+
+SUPTITLE_FONT_SIZE = 16
+LABEL_FONT_SIZE = 14
+
+CURRENT_FILE_DIRECTORY = os.path.dirname(__file__)
+
+def setCurrentWorkingDirectory():
+    if (CURRENT_FILE_DIRECTORY != os.getcwd()):
+        os.chdir(CURRENT_FILE_DIRECTORY)
+
+def clear(title=""):
+    os.system(WINDOWS_CLEAR if platform.system() == WINDOWS_PLATFORM_NAME else UNIX_CLEAR)
+    if title: print(POINT_TITLE_TEMPLATE.format(title))
+
+def getPointName():
+    return os.path.basename(sys.argv[0]).split("_")[1]
+
 def findFilesOnDirectory(file_pattern, path):
     found_items_list = []
 
@@ -136,8 +161,129 @@ def findFilesOnDirectory(file_pattern, path):
 
     return sorted(found_items_list)
 
-def getPointName():
-    return os.path.basename(sys.argv[0]).split("_")[1]
+def presentPoint(main_function):
+    point_name = getPointName()
+    clear(point_name)
+
+    return main_function
+
+def getSignalFromFile(file_name, dict_key=""):
+    file_dictionary = pandas.read_csv(file_name)
+    if not dict_key: dict_key = list(file_dictionary.keys())[0]
+    
+    return file_dictionary[dict_key]
+
+def getRootMeanSquare(signal):
+    squared_signal = signal ** 2
+    rms_value = numpy.sqrt(numpy.sum(squared_signal) / len(squared_signal))
+
+    return rms_value
+
+def getPlotTickFormatter(units, separator=""):
+    return plotTickFormatter(unit=units, sep=separator)
+
+def getSignalFft(signal_array, signal_sampling_rate):
+    signal_array_size = len(signal_array)
+    signal_array -= numpy.mean(signal_array)
+    transformed_signal = numpy.abs(numpy.fft.fft(signal_array))
+    frequency_array = (signal_sampling_rate) * (numpy.arange(1, signal_array_size + 1) / signal_array_size)
+
+    return frequency_array, transformed_signal
+
+def getApneaData():
+    noisy_first_newborn_signal = getSignalFromFile(APNEA_FILE_NAME, APNEA_CSV_KEYS[0])
+    noisy_second_newborn_signal = getSignalFromFile(APNEA_FILE_NAME, APNEA_CSV_KEYS[1])
+    newborn_signals_list = [list(noisy_first_newborn_signal), list(noisy_second_newborn_signal)]
+    newborn_signal_sampling_rate = int(len(noisy_first_newborn_signal) / 60)
+
+    return noisy_first_newborn_signal, noisy_second_newborn_signal, newborn_signals_list, newborn_signal_sampling_rate
+
+def getSimpleFilteredSignal(noisy_signal, signal_samping_rate, filter_type, cutoff_value, acount_for_dc_level=False):
+    dc_level = numpy.mean(noisy_signal) if acount_for_dc_level else 0
+
+    cutoff = cutoff_value / (signal_samping_rate / 2)
+    b, a = signal.butter(4, cutoff, filter_type)
+
+    filtered_signal = signal.filtfilt(b, a, noisy_signal)
+    filtered_signal += dc_level
+
+    return filtered_signal
+
+def getFilteredSignal(noisy_signal, signal_samping_rate, low_cutoff_value=LOW_CUTOFF_VALUE, high_cutoff_value=HIGH_CUTOFF_VALUE, acount_for_dc_level=False):
+    dc_level = numpy.mean(noisy_signal) if acount_for_dc_level else 0
+    low_cutoff = low_cutoff_value / (signal_samping_rate / 2)
+    high_cutoff = high_cutoff_value / (signal_samping_rate / 2)
+    cutoff_frequencies = [low_cutoff, high_cutoff]
+    b, a = signal.butter(4, cutoff_frequencies, BANDPASS)
+
+    filtered_signal = signal.filtfilt(b, a, noisy_signal)
+    filtered_signal += dc_level
+
+    return filtered_signal
+
+def getEegBandsList(verbose=False):
+    eeg_band_names = EEG_BAND_NAMES
+
+    if not verbose:
+        for i in range(len(eeg_band_names)):
+            eeg_band_names[i] = eeg_band_names[i].split(":")[0]
+
+    return [
+        (0, 0, eeg_band_names[0], 1, COLORS_BLUE_GRADIENT[0]),
+        (30, 0 , eeg_band_names[1], 3, COLORS_BLUE_GRADIENT[1]),
+        (12, 30 , eeg_band_names[2], 5, COLORS_BLUE_GRADIENT[2]),
+        (8, 12 , eeg_band_names[3], 2, COLORS_BLUE_GRADIENT[3]),
+        (4, 7 , eeg_band_names[4], 4, COLORS_BLUE_GRADIENT[4]),
+        (0, 4 , eeg_band_names[5], 6,COLORS_BLUE_GRADIENT[5])
+    ]
+
+def getPeakRate(signal_peaks_array, signal_sampling_frequency, signal_duration_in_seconds=60):
+        instant_peak_rates_array = []
+        sampling_period = 1 / signal_sampling_frequency
+        
+        for peak in signal_peaks_array:
+            current_peak_index = signal_peaks_array.index(peak)
+            previous_peak = signal_peaks_array[current_peak_index - 1]
+
+            if (current_peak_index == 0): # Ignore first peak
+                continue
+
+            peak_difference = peak - previous_peak
+
+            peak_duration = peak_difference * sampling_period
+            instant_peak_rate = (1 / peak_duration) * signal_duration_in_seconds
+
+            instant_peak_rates_array.append(instant_peak_rate)
+
+        return round(numpy.mean(instant_peak_rates_array))
+
+def getEegBand(noisy_signal, signal_sampling_rate, eeg_band_data, return_fft=False, do_not_filter=False):
+    filter_type = BANDPASS
+    lower_bound, higher_bound, _, _, _ = eeg_band_data
+    low_cutoff = lower_bound / (signal_sampling_rate / 2)
+    high_cutoff = higher_bound / (signal_sampling_rate / 2)
+
+    if (lower_bound < 1):
+        cutoff_frequencies = high_cutoff
+        filter_type = LOWPASS
+
+    elif (higher_bound == 0):
+        cutoff_frequencies = low_cutoff
+        filter_type = HIGHPASS
+
+    else:
+        cutoff_frequencies = [low_cutoff, high_cutoff]
+
+    if do_not_filter:
+        filtered_signal = noisy_signal
+    else:
+        b, a = signal.butter(5, cutoff_frequencies, filter_type)
+        filtered_signal = signal.filtfilt(b, a, noisy_signal) 
+
+    if (return_fft):
+        return getSignalFft(filtered_signal, signal_sampling_rate)
+
+    return filtered_signal
 
 def createTkRoot():
     root = Tk()
@@ -172,85 +318,11 @@ def displayPopUp(popup_message, popup_title=None, message_type=None):
     elif message_type == WARNING_POPUP_TYPE: messagebox.showwarning(popup_title, popup_message)
     elif message_type == ALERT_POPUP_TYPE: messagebox.showerror(popup_title, popup_message)
 
-def getApneaData():
-    noisy_first_newborn_signal = getSignalFromFile(APNEA_FILE_NAME, APNEA_CSV_KEYS[0])
-    noisy_second_newborn_signal = getSignalFromFile(APNEA_FILE_NAME, APNEA_CSV_KEYS[1])
-    newborn_signals_list = [list(noisy_first_newborn_signal), list(noisy_second_newborn_signal)]
-    newborn_signal_sampling_rate = int(len(noisy_first_newborn_signal) / 60)
-
-    return noisy_first_newborn_signal, noisy_second_newborn_signal, newborn_signals_list, newborn_signal_sampling_rate
-
-def getEegBandsList(verbose=False):
-    eeg_band_names = EEG_BAND_NAMES
-
-    if not verbose:
-        for i in range(len(eeg_band_names)):
-            eeg_band_names[i] = eeg_band_names[i].split(":")[0]
-
-    return [
-        (0, 0, eeg_band_names[0], 1, "midnightblue"),
-        (30, 0 , eeg_band_names[1], 3, "navy"),
-        (12, 30 , eeg_band_names[2], 5, "darkblue"),
-        (8, 12 , eeg_band_names[3], 2, "mediumblue"),
-        (4, 7 , eeg_band_names[4], 4, "blue"),
-        (0, 4 , eeg_band_names[5], 6, "royalblue")
-    ]
-
-def setCurrentWorkingDirectory():
-    if (CURRENT_FILE_DIRECTORY != os.getcwd()):
-        os.chdir(CURRENT_FILE_DIRECTORY)
-
-def clear(title=""):
-    os.system(WINDOWS_CLEAR if platform.system() == WINDOWS_PLATFORM_NAME else UNIX_CLEAR)
-    if title: print(POINT_TITLE_TEMPLATE.format(title))
-
-def presentPoint(main_function):
-    point_name = getPointName()
-    clear(point_name)
-
-    return main_function
-
-def getPlotTickFormatter(units, separator=""):
-    return plotTickFormatter(unit=units, sep=separator)
-
-def getSignalFromFile(file_name, dict_key=""):
-    file_dictionary = pandas.read_csv(file_name)
-    if not dict_key: dict_key = list(file_dictionary.keys())[0]
-    return file_dictionary[dict_key]
-
-def getRootMeanSquare(signal):
-    squared_signal = signal ** 2
-    rms_value = numpy.sqrt(numpy.sum(squared_signal) / len(squared_signal))
-
-    return rms_value
-
-def getPeakRate(signal_peaks_array, signal_sampling_frequency, signal_duration_in_seconds=60):
-        instant_peak_rates_array = []
-        sampling_period = 1 / signal_sampling_frequency
-        
-        for peak in signal_peaks_array:
-            current_peak_index = signal_peaks_array.index(peak)
-            previous_peak = signal_peaks_array[current_peak_index - 1]
-
-            if (current_peak_index == 0): # Ignore first peak
-                continue
-
-            peak_difference = peak - previous_peak
-
-            peak_duration = peak_difference * sampling_period
-            instant_peak_rate = (1 / peak_duration) * signal_duration_in_seconds
-
-            instant_peak_rates_array.append(instant_peak_rate)
-
-        return round(numpy.mean(instant_peak_rates_array))
-
 def extractPeaksFromSignal(signal_array, signal_sampling_frequency, prominence_factor=None):
     prominence_factor = prominence_factor if prominence_factor is not None else 0.25 # About 25% prominence seems to do the trick for both ECGs
 
     return list(signal.find_peaks(signal_array, prominence=prominence_factor)[0]) # Good thing someone already did the hard work
 
-
-    
 def showExtractedPeaks(signal_array, signal_peaks_array, patient_number, plot_figure_title=None, plot_figure_suptitle=None, line_color=COLOR_RED):
     plot_figure_title = plot_figure_title if plot_figure_title is not None else DEFAULT_EXTRACTED_PEAKS_TITLE
     plot_figure_suptitle = plot_figure_suptitle if plot_figure_suptitle is not None else DEFAULT_EXTRACTED_PEAKS_SUPTITLE
@@ -273,29 +345,6 @@ def showExtractedPeaks(signal_array, signal_peaks_array, patient_number, plot_fi
 
     pyplot.show()
 
-def filterSignal(noisy_signal, signal_samping_rate, low_cutoff_value=LOW_CUTOFF_VALUE, high_cutoff_value=HIGH_CUTOFF_VALUE, acount_for_dc_level=False):
-    dc_level = numpy.mean(noisy_signal) if acount_for_dc_level else 0
-    low_cutoff = low_cutoff_value / (signal_samping_rate / 2)
-    high_cutoff = high_cutoff_value / (signal_samping_rate / 2)
-    cutoff_frequencies = [low_cutoff, high_cutoff]
-    b, a = signal.butter(4, cutoff_frequencies, BANDPASS)
-
-    filtered_signal = signal.filtfilt(b, a, noisy_signal)
-    filtered_signal += dc_level
-
-    return filtered_signal
-
-def simpleFilterSignal(noisy_signal, signal_samping_rate, filter_type, cutoff_value, acount_for_dc_level=False):
-    dc_level = numpy.mean(noisy_signal) if acount_for_dc_level else 0
-
-    cutoff = cutoff_value / (signal_samping_rate / 2)
-    b, a = signal.butter(4, cutoff, filter_type)
-
-    filtered_signal = signal.filtfilt(b, a, noisy_signal)
-    filtered_signal += dc_level
-
-    return filtered_signal
-    
 def testCutoffFrequencies(noisy_signal, signal_sampling_rate, start_number, end_number, number_of_samples, level_of_detail=10, band_to_test=LOWPASS, stable_cutoff_frequency=0.5, show_rationale=False):
     def getClosestPerfectGrid(number):
         for i in range(2, 40): # 40 is just a limit to prevent infinite loop
@@ -346,42 +395,6 @@ def testCutoffFrequencies(noisy_signal, signal_sampling_rate, start_number, end_
 
     if show_rationale: displayPopUp(CUTOFF_FREQUENCY_TEST_RATIONALE)
     pyplot.show()
-
-def getSignalFft(signal_array, signal_sampling_rate):
-    signal_array_size = len(signal_array)
-    signal_array -= numpy.mean(signal_array)
-    transformed_signal = numpy.abs(numpy.fft.fft(signal_array))
-    frequency_array = (signal_sampling_rate) * (numpy.arange(1, signal_array_size + 1) / signal_array_size)
-
-    return frequency_array, transformed_signal
-
-def getEegBand(noisy_signal, signal_sampling_rate, eeg_band_data, return_fft=False, do_not_filter=False):
-    filter_type = BANDPASS
-    lower_bound, higher_bound, _, _, _ = eeg_band_data
-    low_cutoff = lower_bound / (signal_sampling_rate / 2)
-    high_cutoff = higher_bound / (signal_sampling_rate / 2)
-
-    if (lower_bound < 1):
-        cutoff_frequencies = high_cutoff
-        filter_type = LOWPASS
-
-    elif (higher_bound == 0):
-        cutoff_frequencies = low_cutoff
-        filter_type = HIGHPASS
-
-    else:
-        cutoff_frequencies = [low_cutoff, high_cutoff]
-
-    if do_not_filter:
-        filtered_signal = noisy_signal
-    else:
-        b, a = signal.butter(5, cutoff_frequencies, filter_type)
-        filtered_signal = signal.filtfilt(b, a, noisy_signal) 
-
-    if (return_fft):
-        return getSignalFft(filtered_signal, signal_sampling_rate)
-
-    return filtered_signal
 
 def animatePlot(plot_figure, plot_axis, signal_array, x_viewing_window=500, y_viewing_window=None, y_label=None, y_label_color="blue", y_label_font_size=14, center_viewing_window_at=0, follow_height=False, follow_height_buffer=None, level_of_compression=3, hide_ticks=False, line_color="blue", show_plot=True):
     x_values, y_values = [], []

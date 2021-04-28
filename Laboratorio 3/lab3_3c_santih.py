@@ -51,7 +51,7 @@ def rectifyAndEnvelopeSignal(signal_array, signal_sampling_frequency, patient_nu
 def calculateBreathingRate(signal_array, signal_sampling_frequency, newborn_number, prominence_factor=None):
     prominence_factor = prominence_factor if prominence_factor is not None else 0.025 # About 2.5% prominence looks right
 
-    filtered_emg_signal = shared.simpleFilterSignal(signal_array, signal_sampling_frequency, shared.HIGHPASS, 60, acount_for_dc_level=True)
+    filtered_emg_signal = shared.getSimpleFilteredSignal(signal_array, signal_sampling_frequency, shared.HIGHPASS, 60, acount_for_dc_level=True)
     rms_enveloped_emg_signal = rectifyAndEnvelopeSignal(filtered_emg_signal, signal_sampling_frequency, newborn_number)
 
     signal_peaks_array = shared.extractPeaksFromSignal(rms_enveloped_emg_signal, signal_sampling_frequency, prominence_factor=prominence_factor)

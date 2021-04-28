@@ -21,7 +21,7 @@ def showSamplingFrequencyTests(signal_array, signal_sampling_frequency):
     shared.testCutoffFrequencies(signal_array, signal_sampling_frequency, 5, 60, 16, band_to_test=shared.HIGHPASS, stable_cutoff_frequency=450) # Best looking is ~60Hz
 
 def showEmgComparison(newborn_signal, newborn_signal_sampling_frequency, newborn_number):
-    filtered_emg_signal = shared.simpleFilterSignal(newborn_signal, newborn_signal_sampling_frequency, shared.HIGHPASS, EMG_HIGHPASS_FREQUENCY_CUTOFF, acount_for_dc_level=True)
+    filtered_emg_signal = shared.getSimpleFilteredSignal(newborn_signal, newborn_signal_sampling_frequency, shared.HIGHPASS, EMG_HIGHPASS_FREQUENCY_CUTOFF, acount_for_dc_level=True)
 
     figure = pyplot.figure(NEWBORN_FIGURE_TITLE.format(newborn_number))
     pyplot.suptitle(EMG_SUPTITLE, fontsize=shared.SUPTITLE_FONT_SIZE)
@@ -41,7 +41,7 @@ def showEmgComparison(newborn_signal, newborn_signal_sampling_frequency, newborn
     return filtered_emg_signal
 
 def showEcgComparison(newborn_signal, newborn_signal_sampling_frequency, newborn_number):
-    filtered_ecg_signal = shared.filterSignal(newborn_signal, newborn_signal_sampling_frequency, ECG_HIGHPASS_FREQUENCY_CUTOFF, ECG_LOWPASS_FREQUENCY_CUTOFF, acount_for_dc_level=True)
+    filtered_ecg_signal = shared.getFilteredSignal(newborn_signal, newborn_signal_sampling_frequency, ECG_HIGHPASS_FREQUENCY_CUTOFF, ECG_LOWPASS_FREQUENCY_CUTOFF, acount_for_dc_level=True)
 
     figure = pyplot.figure(NEWBORN_FIGURE_TITLE.format(newborn_number))
     pyplot.suptitle(ECG_SUPTITLE, fontsize=shared.SUPTITLE_FONT_SIZE)

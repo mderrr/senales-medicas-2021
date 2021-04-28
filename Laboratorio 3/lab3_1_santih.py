@@ -21,7 +21,7 @@ def showSamplingFrequencyTests(signal_array, signal_sampling_frequency):
     shared.testCutoffFrequencies(signal_array, signal_sampling_frequency, 0.3, 1.5, 16, band_to_test=shared.HIGHPASS, stable_cutoff_frequency=20) # Best looking is ~0.5Hz
 
 def applyPassbandFilter(signal_array, signal_sampling_frequency, low_cutoff_value, high_cutoff_value):
-    filtered_ecg_signal = shared.filterSignal(signal_array, signal_sampling_frequency, low_cutoff_value, high_cutoff_value, acount_for_dc_level=True)
+    filtered_ecg_signal = shared.getFilteredSignal(signal_array, signal_sampling_frequency, low_cutoff_value, high_cutoff_value, acount_for_dc_level=True)
 
     pyplot.figure(FILTERED_FIGURE_TITLE).suptitle(FILTERED_FIGURE_SUPTITLE.format(low_cutoff_value, high_cutoff_value), fontsize=shared.SUPTITLE_FONT_SIZE)
     pyplot.subplots_adjust(bottom=0.04, top=0.925, left=0.04, right=0.96)

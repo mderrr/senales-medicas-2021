@@ -9,7 +9,7 @@ HEART_RATE_MESSAGE = "La frequencia cardiaca del neonato {} es de {} Lpm."
 HEART_RATE_POPUP_MESSAGE = "La frequencia cardiaca del {} esta {} con {} de {} {}"
 
 def calculateHeartRate(signal_array, signal_sampling_frequency, newborn_number, prominence_factor=None):
-    filtered_ecg_signal = shared.filterSignal(signal_array, signal_sampling_frequency, 0.5, 20, acount_for_dc_level=True)
+    filtered_ecg_signal = shared.getFilteredSignal(signal_array, signal_sampling_frequency, 0.5, 20, acount_for_dc_level=True)
     signal_peaks_array = shared.extractPeaksFromSignal(filtered_ecg_signal, signal_sampling_frequency, prominence_factor=prominence_factor)
     newborn_heart_rate = shared.getPeakRate(signal_peaks_array, signal_sampling_frequency)
 
