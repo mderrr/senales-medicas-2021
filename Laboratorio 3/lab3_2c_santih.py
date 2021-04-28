@@ -1,33 +1,39 @@
 import shared
-from lab3_2a_santih import splitEegBands
+import lab3_2a_santih
 
-EEG_SIGNAL_FILE = "eeg_1min.csv"
+BAND_RATIO_TITLE = "Porcentaje de relación entre las bandas y la señal:\n\n"
+BAND_RATIO_FORMAT = "{}:{}{}%\n"
 
-BAND_RATIO_TITLE = "\nPorcentaje de relación entre las bandas y la señal completa:"
-BAND_RATIO_FORMAT = "{}:\t{}%"
-POINT_2C_RESPONSE = "\nRESPUESTA 2C: Visualizando estos resultados, vemos que las bandas Gamma, Theta y Beta tienen una baja relacion al RMS completo, mientras que Alpha y Delta tienen una contribucion mas grande, yo creo que esto significa que el paciente puede tener tendencias a TDAH, depresion, soñar despierto, ansiedad, poca conciencia emocional y estres."
+POINT_2C_RESPONSE = "\nVisualizando estos resultados, vemos que las bandas Gamma, Theta y Beta tienen una baja relación al RMS completo, mientras que Alpha y Delta tienen una contribución mas grande, yo creo que esto significa que el paciente puede tener tendencias a TDAH, depresión, soñar despierto, ansiedad, poca conciencia emocional y estrés."
 
 ZOOM_IN_SECONDS = 2
+BAND_RATIO_NUMBER_OF_SPACES = 15
 
 def showBandRatios(sorted_band_list):
-    print(BAND_RATIO_TITLE)
+    message = BAND_RATIO_TITLE
 
     for index in range(len(sorted_band_list) - 1):
-        name, value = sorted_band_list[index]
-        ratio = (value / sorted_band_list[-1][1]) * 100
+        band_name, band_value = sorted_band_list[index]
+        band_ratio = (band_value / sorted_band_list[-1][1]) * 100
 
-        print(BAND_RATIO_FORMAT.format(name, round(ratio, 2)))
+        number_of_spaces = BAND_RATIO_NUMBER_OF_SPACES - len(band_name)
+        spaces = " " * number_of_spaces
+
+        message += BAND_RATIO_FORMAT.format(band_name, spaces, round(band_ratio, 2))
+
+    return message
 
 @shared.presentPoint
 def main():
-    noisy_eeg_signal = shared.getSignalFromFile(EEG_SIGNAL_FILE)
+    noisy_eeg_signal = shared.getSignalFromFile(shared.EEG_FILE_NAME)
 
-    rms_list = splitEegBands(noisy_eeg_signal, shared.getEegBandsList(), display_rms=True, zoom_in_seconds=ZOOM_IN_SECONDS)
+    rms_list = lab3_2a_santih.splitEegBands(noisy_eeg_signal, shared.EEG_SAMPLING_FREQUENCY, shared.getEegBandsList(), display_rms=True, zoom_in_seconds=ZOOM_IN_SECONDS)
     sorted_rms_list = sorted(rms_list, key=lambda band: band[1])
 
-    showBandRatios(sorted_rms_list)
-    
-    print(POINT_2C_RESPONSE)
+    band_ratios_message = showBandRatios(sorted_rms_list)
+
+    full_response = band_ratios_message + POINT_2C_RESPONSE
+    shared.displayResponse(full_response)
 
 if __name__ == "__main__":
     main()
