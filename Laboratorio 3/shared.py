@@ -48,7 +48,7 @@ INFO_POPUP_TITLE = "información"
 WARNING_POPUP_TITLE = "advertencia"
 ALERT_POPUP_TITLE = "ALERTA"
 
-TEST_SAMPLES_TITLE = "Test samples for {} band"
+TEST_SAMPLES_TITLE = "(TEST) samples for {} band (TEST)"
 TEST_FRECUENCY_TITLE = "~{}Hz"
 DEFAULT_EXTRACTED_PEAKS_TITLE = "Patient {}"
 

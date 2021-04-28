@@ -1,6 +1,10 @@
 import os
 import shared
 
+# Este script es solo una herramienta para revisar todos los puntos a la vez
+# si por alguna razón no funciona no importa, los puntos por separado deben
+# funcionar normalmente. 
+
 EXECUTE_SCRIPT_TEMPLATE = "python3 './{}'"
 SCRIPT_FORMAT = "*_santih.py"
 

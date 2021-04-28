@@ -5,7 +5,7 @@ from matplotlib import pyplot
 NEWBORN_NAME_FORMAT = "neonato {}"
 NEWBORN_FIGURE_TITLE = "Newborn {}"
 
-PEAKS_SUPTITLE = "Extracted Peaks From Newborn {}'s ECG"
+PEAKS_SUPTITLE = "Extracted Peaks From Newborn {}'s EMG"
 EMG_PROCESSING_SUPTITLE = "Tranformations applied to newborn {}'s EMG Signal"
 
 BREATHING_RATE_MESSAGE = "La frequencia respiratoria del neonato {} es de {} Respiraciones/min."

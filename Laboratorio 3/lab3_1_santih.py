@@ -34,11 +34,15 @@ def applyPassbandFilter(signal_array, signal_sampling_frequency, low_cutoff_valu
 
     pyplot.show()
 
-def showFilterFrequencyResponse(cutoff_value, sampling_rate, filter_type=shared.LOWPASS):
+def showFilterFrequencyResponse(cutoff_values, sampling_rate, filter_type=shared.LOWPASS, show_plot=False):
     line_color = shared.COLOR_BLUE if filter_type == shared.LOWPASS else shared.COLOR_ORANGE
     tick_formatter = shared.getPlotTickFormatter(shared.UNIT_HERTZ)
 
-    cutoff = cutoff_value / (sampling_rate / 2)
+    cutoff = cutoff_values[0] / (sampling_rate / 2)
+
+    if len(cutoff_values) > 1:
+        cutoff = [cutoff_values[0] / (sampling_rate / 2), cutoff_values[1] / (sampling_rate / 2)]
+
     b, a = signal.butter(4, cutoff, filter_type)
     w, h = signal.freqz(b, a)
     h = numpy.abs(h)
@@ -48,17 +52,25 @@ def showFilterFrequencyResponse(cutoff_value, sampling_rate, filter_type=shared.
     axis = pyplot.subplot(1, 1, 1)
     axis.xaxis.set_major_formatter(tick_formatter)
     pyplot.subplots_adjust(bottom=0.08, top=0.96, left=0.08, right=0.96)
-    pyplot.axvline(x=cutoff_value, color=line_color, alpha=0.8, label=CUTOFF_FREQUENCY_LEGEND.format(filter_type), linestyle=shared.LINESTYLE_DASHED)
+
+    pyplot.axvline(x=cutoff_values[0], color=line_color, alpha=0.8, label=CUTOFF_FREQUENCY_LEGEND.format(filter_type), linestyle=shared.LINESTYLE_DASHED)
+
+    if len(cutoff_values) > 1:
+        pyplot.axvline(x=cutoff_values[1], color=line_color, alpha=0.8, linestyle=shared.LINESTYLE_DASHED)
+        pyplot.fill_between(w, h, color='blue', alpha=0.3)
 
     pyplot.plot(w, h, label=FREQUENCY_RESPONSE_LEGEND.format(filter_type), linewidth=3)
 
     pyplot.xlim(0, 50)
     pyplot.legend()
 
+    if show_plot: pyplot.show()
+
 def showFrequencyReponsePlot(low_cutoff_value, high_cutoff_value, signal_sampling_frequency):
-    showFilterFrequencyResponse(high_cutoff_value, signal_sampling_frequency)
-    showFilterFrequencyResponse(low_cutoff_value, signal_sampling_frequency, filter_type=shared.HIGHPASS)
-    pyplot.show()
+    showFilterFrequencyResponse([high_cutoff_value], signal_sampling_frequency)
+    showFilterFrequencyResponse([low_cutoff_value], signal_sampling_frequency, filter_type=shared.HIGHPASS, show_plot=True)
+    
+    showFilterFrequencyResponse([low_cutoff_value, high_cutoff_value], signal_sampling_frequency, filter_type=shared.BANDPASS, show_plot=True)
 
 @shared.presentPoint
 def main():
