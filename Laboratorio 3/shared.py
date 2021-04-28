@@ -88,6 +88,9 @@ CENTER = "center"
 RIGHT = "right"
 ARIAL= "Arial"
 
+WINDOWS_EXECUTE_TEMPLATE = "py .\{}"
+UNIX_EXECUTE_TEMPLATE = "python3 './{}'"
+
 BUTTON_TEXT_CONTINUE = "Continuar"
 
 APNEA_CSV_KEYS = [
@@ -147,6 +150,11 @@ def setCurrentWorkingDirectory():
 def clear(title=""):
     os.system(WINDOWS_CLEAR if platform.system() == WINDOWS_PLATFORM_NAME else UNIX_CLEAR)
     if title: print(POINT_TITLE_TEMPLATE.format(title))
+
+def getPythonName():
+    python_name = WINDOWS_EXECUTE_TEMPLATE if platform.system() == WINDOWS_PLATFORM_NAME else UNIX_EXECUTE_TEMPLATE
+   
+    return python_name
 
 def getPointName():
     return os.path.basename(sys.argv[0]).split("_")[1]
@@ -447,6 +455,9 @@ def animatePlot(plot_figure, plot_axis, signal_array, x_viewing_window=500, y_vi
             constantPlotHeight(axis, y_viewing_window)
 
     def updateAnimation(frame):
+        if not pyplot.fignum_exists(plot_figure.number):
+            return 
+
         x_values.append(frame)
         y_values.append(signal_array[frame])
 
