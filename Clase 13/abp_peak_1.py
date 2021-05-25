@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 from scipy import signal
 
-df = pd.read_csv('abp3.csv')
+df = pd.read_csv('./Clase 13/abp3.csv')
 sig = df['ABP (125 Hz)']
 fs = 125
 
